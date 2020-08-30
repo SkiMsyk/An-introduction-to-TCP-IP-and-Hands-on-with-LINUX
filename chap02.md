@@ -36,8 +36,8 @@
 
 # 準備
 ```shell
-$ sudo apt-get update
-$ sudo apt-get -y install \
+sudo apt-get update
+sudo apt-get -y install \
 > iproute2 \
 > iputils-ping \
 > traceroute \
@@ -54,7 +54,7 @@ $ sudo apt-get -y install \
 
 # ping
 ```shell
-$ ping -c 3 8.8.8.8
+ping -c 3 8.8.8.8
 ```
 
 result
@@ -90,7 +90,7 @@ rtt min/avg/max/mdev = 6.518/9.067/13.262/2.989 ms
 
 差出人と宛先の表示
 ```shell
-$ ip address show
+ip address show
 ```
 
 ```shell

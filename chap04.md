@@ -20,7 +20,7 @@
 まず，既に作られているNetwork Namespaceを削除する
 
 ```shell
-$ $ $ for ns in $(ip netns list | awk '{print $1}'); dsudo ip netns delete $ns; done
+for ns in $(ip netns list | awk '{print $1}'); dsudo ip netns delete $ns; done
 ```
 
 ## 構成  
@@ -30,33 +30,33 @@ $ $ $ for ns in $(ip netns list | awk '{print $1}'); dsudo ip netns delete $ns; 
 |ns2|ns2-veth0|192.0.2.2|
 
 ```shell
-$ $ sudo ip netns add ns1
-$ $ sudo ip netns add ns2
-$ $ sudo ip link add ns1-veth0 type veth peer name ns2-veth0
-$ $ sudo ip link set ns1-veth0 netns ns1
-$ $ sudo ip link set ns2-veth0 netns ns2
-$ $ sudo ip netns exec ns1 ip link set ns1-veth0 up
-$ $ sudo ip netns exec ns2 ip link set ns2-veth0 up
-$ $ sudo ip netns exec ns1 ip address add 192.0.2.1/24 dev ns1-veth0
-$ $ sudo ip netns exec ns2 ip address add 192.0.2.2/24 dev ns2-veth0
+sudo ip netns add ns1
+sudo ip netns add ns2
+sudo ip link add ns1-veth0 type veth peer name ns2-veth0
+sudo ip link set ns1-veth0 netns ns1
+sudo ip link set ns2-veth0 netns ns2
+sudo ip netns exec ns1 ip link set ns1-veth0 up
+sudo ip netns exec ns2 ip link set ns2-veth0 up
+sudo ip netns exec ns1 ip address add 192.0.2.1/24 dev ns1-veth0
+sudo ip netns exec ns2 ip address add 192.0.2.2/24 dev ns2-veth0
 ```
 
 MACアドレスの変更
 
 ```shell
-$ $ sudo ip netns exec ns1 ip link set dev ns1-veth0 address 00:00:5E:00:53:01
-$ $ sudo ip netns exec ns2 ip link set dev ns2-veth0 address 00:00:5E:00:53:02
+sudo ip netns exec ns1 ip link set dev ns1-veth0 address 00:00:5E:00:53:01
+sudo ip netns exec ns2 ip link set dev ns2-veth0 address 00:00:5E:00:53:02
 ```
 
 変更の確認
 
 ```shell
-$ $ $sudo ip netns exec ns1 ip link show | grep link/ether
+$sudo ip netns exec ns1 ip link show | grep link/ether
 link/ether 00:00:5e:00:53:01 brd ff:ff:ff:ff:ff:ff link-netnsid 1
 ```
 
 ```shell
-$ $ sudo ip netns exec ns2 ip link show | grep link/ether
+sudo ip netns exec ns2 ip link show | grep link/ether
 link/ether 00:00:5e:00:53:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
 ```
 
@@ -64,12 +64,12 @@ link/ether 00:00:5e:00:53:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
 - 別のターミナルを開いて，次のコマンドを入力
 
 ```shell
-$ $ sudo ip netns exec ns1 tcpdump -tnel -i ns1-veth0 icmp
+sudo ip netns exec ns1 tcpdump -tnel -i ns1-veth0 icmp
 ```
 
 - 元のターミナルでpingで通信をする．
 ```shell
-$ $ sudo ip netns exec ns1 ping -c 3 192.0.2.2 -I 192.0.2.1
+sudo ip netns exec ns1 ping -c 3 192.0.2.2 -I 192.0.2.1
 PING 192.0.2.2 (192.0.2.2) from 192.0.2.1 : 56(84) bytes of data.
 64 bytes from 192.0.2.2: icmp_seq=1 ttl=64 time=0.128 ms
 64 bytes from 192.0.2.2: icmp_seq=2 ttl=64 time=0.060 ms
@@ -82,7 +82,7 @@ rtt min/avg/max/mdev = 0.060/0.084/0.128/0.032 ms
 
 tcpdumpを実行しているターミナルの表示を見てみる．
 ```shell
-$ $ sudo ip netns exec ns1 tcpdump -tnel -i ns1-veth0 icmp
+sudo ip netns exec ns1 tcpdump -tnel -i ns1-veth0 icmp
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
 listening on ns1-veth0, link-type EN10MB (Ethernet), capture size 262144 bytes
 00:00:5e:00:53:01 > 00:00:5e:00:53:02, ethertype IPv4 (0x0800), length 98: 192.0.2.1 > 192.0.2.2: ICMP echo request, id 3840, seq 1, length 64
@@ -107,7 +107,7 @@ listening on ns1-veth0, link-type EN10MB (Ethernet), capture size 262144 bytes
 
 MACアドレスのキャッシュを全て削除するコマンド．
 ```shell
-$ $ sudo ip netns exec ns1 ip neigh flush all
+sudo ip netns exec ns1 ip neigh flush all
 ```
 
 一般的なプロトコルスタックでは，既知のMACアドレスをキャッシュしていて，キャッシュが残った状態ではこの内容が優先して使われる．
@@ -115,11 +115,11 @@ $ $ sudo ip netns exec ns1 ip neigh flush all
 ARPを観察するためのオプションを追加して再度tcpdumpコマンドを実行
 
 ```shell
-$ $ sudo ip netns exec ns1 tcpdump -tnel -i ns1-veth0 icmp or arp
+sudo ip netns exec ns1 tcpdump -tnel -i ns1-veth0 icmp or arp
 ```
 
 ```shell
-$ $ sudo ip netns exec ns1 ping -c 3 192.0.2.2 -I 192.0.2.1
+sudo ip netns exec ns1 ping -c 3 192.0.2.2 -I 192.0.2.1
 PING 192.0.2.2 (192.0.2.2) from 192.0.2.1 : 56(84) bytes of data.
 64 bytes from 192.0.2.2: icmp_seq=1 ttl=64 time=0.781 ms
 64 bytes from 192.0.2.2: icmp_seq=2 ttl=64 time=0.193 ms
@@ -133,7 +133,7 @@ rtt min/avg/max/mdev = 0.193/0.551/0.781/0.256 ms
 すると次のようにキャプチャされる
 
 ```shell
-$ $ sudo ip netns exec ns1 tcpdump -tnel -i ns1-veth0 icmp or arp
+sudo ip netns exec ns1 tcpdump -tnel -i ns1-veth0 icmp or arp
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
 listening on ns1-veth0, link-type EN10MB (Ethernet), capture size 262144 bytes
 00:00:5e:00:53:01 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.0.2.2 tell 192.0.2.1, length 28
@@ -193,42 +193,42 @@ listening on ns1-veth0, link-type EN10MB (Ethernet), capture size 262144 bytes
 |ns2|ns2-veth0|198.51.100.1|
 
 ```shell
-$ $ for ns in $(ip netns list | awk '{print $1}'); do sudo ip netns delete $ns; done
+for ns in $(ip netns list | awk '{print $1}'); do sudo ip netns delete $ns; done
 ```
 
 ```shell
-$ sudo ip netns add ns1
-$ sudo ip netns add ns2
-$ sudo ip netns add router
+sudo ip netns add ns1
+sudo ip netns add ns2
+sudo ip netns add router
 
-$ sudo ip link add ns1-veth0 type veth peer name gw-veth0
-$ sudo ip link add ns2-veth0 type veth peer name gw-veth1
+sudo ip link add ns1-veth0 type veth peer name gw-veth0
+sudo ip link add ns2-veth0 type veth peer name gw-veth1
 
-$ sudo ip link set ns1-veth0 netns ns1
-$ sudo ip link set gw-veth0 netns router
-$ sudo ip link set gw-veth1 netns router
-$ sudo ip link set ns2-veth0 netns ns2
+sudo ip link set ns1-veth0 netns ns1
+sudo ip link set gw-veth0 netns router
+sudo ip link set gw-veth1 netns router
+sudo ip link set ns2-veth0 netns ns2
 
-$ sudo ip netns exec ns1 ip link set ns1-veth0 up
-$ sudo ip netns exec ns2 ip link set ns2-veth0 up
-$ sudo ip netns exec router ip link set gw-veth0 up
-$ sudo ip netns exec router ip link set gw-veth1 up
+sudo ip netns exec ns1 ip link set ns1-veth0 up
+sudo ip netns exec ns2 ip link set ns2-veth0 up
+sudo ip netns exec router ip link set gw-veth0 up
+sudo ip netns exec router ip link set gw-veth1 up
 
-$ sudo ip netns exec ns1 ip address add 192.0.2.1/24 dev ns1-veth0
-$ sudo ip netns exec router ip address add 192.0.2.254/24 dev gw-veth0
-$ sudo ip netns exec router ip address add 198.51.100.254/24 dev gw-veth1
-$ sudo ip netns exec ns2 ip address add 198.51.100.1/24 dev ns2-veth0
+sudo ip netns exec ns1 ip address add 192.0.2.1/24 dev ns1-veth0
+sudo ip netns exec router ip address add 192.0.2.254/24 dev gw-veth0
+sudo ip netns exec router ip address add 198.51.100.254/24 dev gw-veth1
+sudo ip netns exec ns2 ip address add 198.51.100.1/24 dev ns2-veth0
 
-$ sudo ip netns exec ns1 ip route add default via 192.0.2.254
-$ sudo ip netns exec ns2 ip route add default via 198.51.100.254
+sudo ip netns exec ns1 ip route add default via 192.0.2.254
+sudo ip netns exec ns2 ip route add default via 198.51.100.254
 
-$ sudo ip netns exec router sysctl net.ipv4.ip_forward=1
+sudo ip netns exec router sysctl net.ipv4.ip_forward=1
 
-$ sudo ip netns exec ns1 ip link set dev ns1-veth0 address 00:00:5E:00:53:11
-$ sudo ip netns exec ns2 ip link set dev ns2-veth0 address 00:00:5E:00:53:22
+sudo ip netns exec ns1 ip link set dev ns1-veth0 address 00:00:5E:00:53:11
+sudo ip netns exec ns2 ip link set dev ns2-veth0 address 00:00:5E:00:53:22
 
-$ sudo ip netns exec router ip link set dev gw-veth0 address 00:00:5E:00:53:12
-$ sudo ip netns exec router ip link set dev gw-veth1 address 00:00:5E:00:53:21
+sudo ip netns exec router ip link set dev gw-veth0 address 00:00:5E:00:53:12
+sudo ip netns exec router ip link set dev gw-veth1 address 00:00:5E:00:53:21
 
 ```
 
@@ -236,17 +236,17 @@ $ sudo ip netns exec router ip link set dev gw-veth1 address 00:00:5E:00:53:21
 
 gw-veth0側
 ```shell
-$ sudo ip netns exec router tcpdump -tnel -i gw-veth0 icmp or arp
+sudo ip netns exec router tcpdump -tnel -i gw-veth0 icmp or arp
 ```
 
 gw-veth1側
 ```shell
-$ sudo ip netns exec router tcpdump -tnel -i gw-veth1 icmp or arp
+sudo ip netns exec router tcpdump -tnel -i gw-veth1 icmp or arp
 ```
 
 ping
 ```shell
-$ sudo ip netns exec ns1 ping -c 3 198.51.100.1 -I 192.0.2.1
+sudo ip netns exec ns1 ping -c 3 198.51.100.1 -I 192.0.2.1
 ```
 
 # ブリッジ  
@@ -297,54 +297,54 @@ $ sudo ip netns exec ns1 ping -c 3 198.51.100.1 -I 192.0.2.1
 
 既存のNetwork Namespaceを削除
 ```shell
-$ for ns in $(ip netns list | awk '{print $1}'); do sudo ip netns delete $ns; done
+for ns in $(ip netns list | awk '{print $1}'); do sudo ip netns delete $ns; done
 ```
 
 
 ```shell
-$ sudo ip netns add ns1
-$ sudo ip netns add ns2
-$ sudo ip netns add ns3
+sudo ip netns add ns1
+sudo ip netns add ns2
+sudo ip netns add ns3
 
-$ sudo ip link add ns1-veth0 type veth peer name ns1-br0
-$ sudo ip link add ns2-veth0 type veth peer name ns2-br0
-$ sudo ip link add ns3-veth0 type veth peer name ns3-br0
+sudo ip link add ns1-veth0 type veth peer name ns1-br0
+sudo ip link add ns2-veth0 type veth peer name ns2-br0
+sudo ip link add ns3-veth0 type veth peer name ns3-br0
 
-$ sudo ip link set ns1-veth0 netns ns1
-$ sudo ip link set ns2-veth0 netns ns2
-$ sudo ip link set ns3-veth0 netns ns3
+sudo ip link set ns1-veth0 netns ns1
+sudo ip link set ns2-veth0 netns ns2
+sudo ip link set ns3-veth0 netns ns3
 
-$ sudo ip netns exec ns1 ip link set ns1-veth0 up
-$ sudo ip netns exec ns2 ip link set ns2-veth0 up
-$ sudo ip netns exec ns3 ip link set ns3-veth0 up
+sudo ip netns exec ns1 ip link set ns1-veth0 up
+sudo ip netns exec ns2 ip link set ns2-veth0 up
+sudo ip netns exec ns3 ip link set ns3-veth0 up
 
-$ sudo ip netns exec ns1 ip address add 192.0.2.1/24 dev ns1-veth0
-$ sudo ip netns exec ns2 ip address add 192.0.2.2/24 dev ns2-veth0
-$ sudo ip netns exec ns3 ip address add 192.0.2.3/24 dev ns3-veth0
+sudo ip netns exec ns1 ip address add 192.0.2.1/24 dev ns1-veth0
+sudo ip netns exec ns2 ip address add 192.0.2.2/24 dev ns2-veth0
+sudo ip netns exec ns3 ip address add 192.0.2.3/24 dev ns3-veth0
 
-$ sudo ip netns exec ns1 ip link set dev ns1-veth0 address 00:00:5E:00:53:01
-$ sudo ip netns exec ns2 ip link set dev ns2-veth0 address 00:00:5E:00:53:02
-$ sudo ip netns exec ns3 ip link set dev ns3-veth0 address 00:00:5E:00:53:03
+sudo ip netns exec ns1 ip link set dev ns1-veth0 address 00:00:5E:00:53:01
+sudo ip netns exec ns2 ip link set dev ns2-veth0 address 00:00:5E:00:53:02
+sudo ip netns exec ns3 ip link set dev ns3-veth0 address 00:00:5E:00:53:03
 
 ```
 
 次にネットワークブリッジを追加する
 
 ```shell
-$ sudo ip link add dev br0 type bridge
-$ sudo ip link set br0 up
+sudo ip link add dev br0 type bridge
+sudo ip link set br0 up
 
 ```
 
 用意したvethインターフェースの片方をネットワークブリッジに追加する
 
 ```shell
-$ sudo ip link set ns1-br0 master br0
-$ sudo ip link set ns2-br0 master br0
-$ sudo ip link set ns3-br0 master br0
-$ sudo ip link set ns1-br0 up
-$ sudo ip link set ns2-br0 up
-$ sudo ip link set ns3-br0 up
+sudo ip link set ns1-br0 master br0
+sudo ip link set ns2-br0 master br0
+sudo ip link set ns3-br0 master br0
+sudo ip link set ns1-br0 up
+sudo ip link set ns2-br0 up
+sudo ip link set ns3-br0 up
 
 ```
 

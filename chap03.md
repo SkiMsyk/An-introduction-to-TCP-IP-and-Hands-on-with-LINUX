@@ -7,18 +7,18 @@
 まず次を実行する
 
 ```shell
-$ sudo ip netns add helloworld
+sudo ip netns add helloworld
 ```
 
 しかし，
 ```shell
-$ mount --make-shared /var/run/netns failed: Operation not permitted
+mount --make-shared /var/run/netns failed: Operation not permitted
 ```
 と怒られた．dockerではrootユーザーであってもip系のコマンドにはpermissionがない場合があるらしい．`docker run`の際にオプションをつけておけばOK
 
 ※ ということで一旦コンテナを削除してから作り直した
 ```shell
-$ docker exec --privileged -it -d --name ubuntu ubuntu:18.04
+docker exec --privileged -it -d --name ubuntu ubuntu:18.04
 ```
 
 無事`sudo ip netns add helloworld`が通る．  
@@ -26,14 +26,14 @@ $ docker exec --privileged -it -d --name ubuntu ubuntu:18.04
 作られたかどうかを次のように確認できる．
 
 ```shell
-$ ip netns list
+ip netns list
 helloworld
 ```
 
 作成されたNetwork Namespaceではコマンドを実行できる．
 
 ```shell
-$ ip netns exec [hogehoge]
+ip netns exec [hogehoge]
 ```
 
 という形式を取る．
@@ -41,7 +41,7 @@ $ ip netns exec [hogehoge]
 - ip address showと同等のコマンド
 
 ```shell
-$ sudo ip netns exec helloworld ip address show
+sudo ip netns exec helloworld ip address show
 ```
 
 - `sudo ip address show`と`sudo ip netns exec helloworld ip address show`では全く異なる結果が返される
@@ -51,13 +51,13 @@ $ sudo ip netns exec helloworld ip address show
 Network Namespaceの削除
 
 ```shell
-$ sudo ip netns delete helloworld
+sudo ip netns delete helloworld
 ```
 
 ちなみに，
 
 ```shell
-$ sudo ip  netns exec helloworld bash
+sudo ip  netns exec helloworld bash
 ```
 
 でNetwork Namespaceの環境のシェルを立ち上げることができる．実際にはこっちの方がタイプが楽．
@@ -71,8 +71,8 @@ $ sudo ip  netns exec helloworld bash
 - この二つのネットワークを繋げる
 
 ```shell
-$ sudo ip netns add ns1
-$ sudo ip netns add ns2
+sudo ip netns add ns1
+sudo ip netns add ns2
 ```
 
 このコードを実行しただけでは，`ns1,ns2`の二つのネットワークは独立している．  
@@ -81,7 +81,7 @@ $ sudo ip netns add ns2
 `veth`を作るコマンドを実行する
 
 ```shell
-$ sudo ip link add ns1-veth0 type veth peer name ns2-veth0
+sudo ip link add ns1-veth0 type veth peer name ns2-veth0
 ```
 
 これで仮想的なネットワークインターフェース（veth）が作成された．  
@@ -90,7 +90,7 @@ $ sudo ip link add ns1-veth0 type veth peer name ns2-veth0
 作られたネットワークインターフェースの確認
 
 ```shell
-$ ip link show | grep veth
+ip link show | grep veth
 ```
 
 このvethインターフェースのペアをNetwork Namespaceで使えるようにする．  
@@ -99,8 +99,8 @@ $ ip link show | grep veth
 - ip link setサブコマンドを使う
 
 ```shell
-$ sudo ip link set ns1-veth0 netns ns1
-$ sudo ip link set ns2-veth0 netns ns2
+sudo ip link set ns1-veth0 netns ns1
+sudo ip link set ns2-veth0 netns ns2
 ```
 
 - vethインターフェースがNetwork Namespaceで使えるように
@@ -108,15 +108,15 @@ $ sudo ip link set ns2-veth0 netns ns2
 この状態では
 
 ```shell
-$ ip link show | grep veth
-$ 
+ip link show | grep veth
+
 ```
 
 となるように，システム領域からvethインターフェースは見えなくなっている．  
 一方，`ns1, ns2`それぞれの領域でvethインターフェースが稼働していることを確認できる．
 
 ```shell
-$ sudo ip netns exec <name> ip link show | grep veth
+sudo ip netns exec <name> ip link show | grep veth
 ```
 
 これで，ns1とns2のNetwork Namespaceがvethインターフェースによって繋がった．
@@ -132,8 +132,8 @@ $ sudo ip netns exec <name> ip link show | grep veth
 
 
 ```shell
-$ sudo ip netns exec ns1 ip address add 192.0.2.1/24 dev ns1-veth0
-$ sudo ip netns exec ns2 ip address add 192.0.2.2/24 dev ns2-veth0
+sudo ip netns exec ns1 ip address add 192.0.2.1/24 dev ns1-veth0
+sudo ip netns exec ns2 ip address add 192.0.2.2/24 dev ns2-veth0
 ```
 
 ## ネットワークインターフェースにおけるUPとDOWN  
@@ -145,8 +145,8 @@ $ sudo ip netns exec ns2 ip address add 192.0.2.2/24 dev ns2-veth0
 また，明示的にUPを設定するのが良い．
 
 ```shell
-$ sudo ip netns exec ns1 ip link set ns1-veth0 up
-$ sudo ip netns exec ns2 ip link set ns2-veth0 up
+sudo ip netns exec ns1 ip link set ns1-veth0 up
+sudo ip netns exec ns2 ip link set ns2-veth0 up
 ```
 
 ## Network Namespace同士の通信  
@@ -155,7 +155,7 @@ $ sudo ip netns exec ns2 ip link set ns2-veth0 up
 - pingコマンドを実行してみよう
 
 ```shell
-$ sudo ip netns exec ns1 ping -c 3 192.0.2.2
+sudo ip netns exec ns1 ping -c 3 192.0.2.2
 PING 192.0.2.2 (192.0.2.2) 56(84) bytes of data.
 64 bytes from 192.0.2.2: icmp_seq=1 ttl=64 time=0.284 ms
 64 bytes from 192.0.2.2: icmp_seq=2 ttl=64 time=0.212 ms
@@ -249,38 +249,38 @@ CIDRとは別の表現 **サブネットマスク**
 先ほど作ったNetwork Namespaceは削除する
 
 ```shell
-$ for ns in $(ip netns list | awk '{print $1}'): do sudo ip netns delete $ns: done
+for ns in $(ip netns list | awk '{print $1}'): do sudo ip netns delete $ns: done
 ```
 
 - Network namespaceの作成
 ```shell
-$ sudo ip netns add ns1
-$ sudo ip netns add router
-$ sudo ip netns add ns2
+sudo ip netns add ns1
+sudo ip netns add router
+sudo ip netns add ns2
 ```
 
 - vethインターフェースの作成
 ```shell
-$ sudo ip link add ns1-veth0 type veth peer name gw-veth0
-$ sudo ip link add ns2-veth0 type veth peer name gw veth1
+sudo ip link add ns1-veth0 type veth peer name gw-veth0
+sudo ip link add ns2-veth0 type veth peer name gw-veth1
 ```
 
 - vethインターフェースの所属の変更
 
 ```shell
-$ sudo ip link set ns1-veth0 netns ns1
-$ sudo ip link set gw-veth0 netns router
-$ sudo ip link set gw-veth1 netns router
-$ sudo ip link set ns2-veth0 netns ns2
+sudo ip link set ns1-veth0 netns ns1
+sudo ip link set gw-veth0 netns router
+sudo ip link set gw-veth1 netns router
+sudo ip link set ns2-veth0 netns ns2
 ```
 
 - vethインターフェースの状態を有効にする
 
 ```shell
-$ sudo ip netns exec ns1 ip link set ns1-veth0 up
-$ sudo ip netns exec router ip link set gw-veth0 up
-$ sudo ip netns exec router ip link set gw-veth1 up
-$ sudo ip netns exec ns2 ip link set ns2-veth0 up
+sudo ip netns exec ns1 ip link set ns1-veth0 up
+sudo ip netns exec router ip link set gw-veth0 up
+sudo ip netns exec router ip link set gw-veth1 up
+sudo ip netns exec ns2 ip link set ns2-veth0 up
 ```
 
 ここまでで物理的な配線が完了．
@@ -289,14 +289,14 @@ $ sudo ip netns exec ns2 ip link set ns2-veth0 up
 
 ns1側(`192.0.2.0`)
 ```shell
-$ sudo ip netns exec ns1 ip address add 192.0.2.1/24 dev ns1-veth0
-$ sudo ip netns exec router ip address add 192.0.2.254/24 dev gw-veth0
+sudo ip netns exec ns1 ip address add 192.0.2.1/24 dev ns1-veth0
+sudo ip netns exec router ip address add 192.0.2.254/24 dev gw-veth0
 ```
 
 ns2側(`198.51.100.0`)
 ```shell
-$ sudo ip netns exec ns2 ip address add 198.51.100.1/24 dev ns2-veth0
-$ sudo ip netns exec ns2 ip address add 198.51.100.254/24 dev gw-veth1
+sudo ip netns exec ns2 ip address add 198.51.100.1/24 dev ns2-veth0
+sudo ip netns exec ns2 ip address add 198.51.100.254/24 dev gw-veth1
 ```
 
 ## 実験  
@@ -304,7 +304,7 @@ $ sudo ip netns exec ns2 ip address add 198.51.100.254/24 dev gw-veth1
 ### ns1 → routerへの通信  
 
 ```shell
-$ sudo ip netns exec ns1 ping -c 3 192.0.2.254 -I 192.0.2.1
+sudo ip netns exec ns1 ping -c 3 192.0.2.254 -I 192.0.2.1
 PING 192.0.2.254 (192.0.2.254) from 192.0.2.1 : 56(84) bytes of data.
 64 bytes from 192.0.2.254: icmp_seq=1 ttl=64 time=0.233 ms
 64 bytes from 192.0.2.254: icmp_seq=2 ttl=64 time=0.288 ms
@@ -317,7 +317,7 @@ rtt min/avg/max/mdev = 0.165/0.228/0.288/0.053 ms
 
 ### ns2 → routerへの通信
 ```shell
-$ sudo ip netns exec ns2 ping -c 3 198.51.100.254 -I 198.51.100.1
+sudo ip netns exec ns2 ping -c 3 198.51.100.254 -I 198.51.100.1
 PING 198.51.100.254 (198.51.100.254) from 198.51.100.1 : 56(84) bytes of data.
 64 bytes from 198.51.100.254: icmp_seq=1 ttl=64 time=0.175 ms
 64 bytes from 198.51.100.254: icmp_seq=2 ttl=64 time=0.097 ms
@@ -334,7 +334,7 @@ rtt min/avg/max/mdev = 0.097/0.286/0.588/0.216 ms
 この状態で実行してみる．
 
 ```shell
-$ sudo ip netns exec ns1 ping -c 3 198.51.100.1 -I 192.0.2.1
+sudo ip netns exec ns1 ping -c 3 198.51.100.1 -I 192.0.2.1
 PING 198.51.100.1 (198.51.100.1) from 192.0.2.1 : 56(84) bytes of data.
 ping: sendmsg: Network is unreachable
 ping: sendmsg: Network is unreachable
@@ -350,12 +350,12 @@ ping: sendmsg: Network is unreachable
 - ルーティングテーブルを確認する
 
 ```shell
-$ sudo ip netns exec ns1 ip route show
+sudo ip netns exec ns1 ip route show
 192.0.2.0/24 dev ns1-veth0 proto kernel scope link src 192.0.2.1
 ```
 
 ```shell
-$ sudo ip netns exec ns2 ip route show
+sudo ip netns exec ns2 ip route show
 198.51.100.0/24 dev ns2-veth0 proto kernel scope link src 198.51.100.1 
 ```
 
@@ -364,14 +364,14 @@ $ sudo ip netns exec ns2 ip route show
 - `ns2`からの通信の際，宛先に一致しない時に探しに行くデフォルトルートの追加
 
 ```shell
-$ sudo ip netns exec ns1 ip route add default via 192.0.2.254
-$ sudo ip netns exec ns2 ip route add default via 198.51.100.254
+sudo ip netns exec ns1 ip route add default via 192.0.2.254
+sudo ip netns exec ns2 ip route add default via 198.51.100.254
 ```
 
 再度，ns1 から ns2にpingで通信テストを行なってみる．
 
 ```shell
-$ sudo ip netns exec ns1 ping -c 3 198.51.100.1 -I 192.0.2.1
+sudo ip netns exec ns1 ping -c 3 198.51.100.1 -I 192.0.2.1
 PING 198.51.100.1 (198.51.100.1) from 192.0.2.1 : 56(84) bytes of data.
 64 bytes from 198.51.100.1: icmp_seq=1 ttl=63 time=0.137 ms
 64 bytes from 198.51.100.1: icmp_seq=2 ttl=63 time=0.194 ms
@@ -387,13 +387,13 @@ rtt min/avg/max/mdev = 0.137/0.198/0.264/0.053 ms
 環境によってはこの状態でもまだ失敗する場合がある．その理由は，カーネルのパラメータの値による．想定している失敗を再現するには以下を実行しておくと再現する．
 
 ```shell
-$ sudo ip netns exec router sysctl net.ipv4.ip_forward=0
+sudo ip netns exec router sysctl net.ipv4.ip_forward=0
 ```
 
 すると，次のような結果を得る．
 
 ```shell
-$ sudo ip netns exec ns1 ping -c 3 198.51.100.1 -I 192.0.2.1
+sudo ip netns exec ns1 ping -c 3 198.51.100.1 -I 192.0.2.1
 PING 198.51.100.1 (198.51.100.1) from 192.0.2.1 : 56(84) bytes of data.
 
 --- 198.51.100.1 ping statistics ---
@@ -403,7 +403,7 @@ PING 198.51.100.1 (198.51.100.1) from 192.0.2.1 : 56(84) bytes of data.
 返答がなく，パケットが100%と失われている．これを修正するために，先ほどとは逆にパラメータの値を変更し通信を有効にする．
 
 ```shell
-$ sudo ip netns exec router sysctl net.ipv4.ip_forward=1
+sudo ip netns exec router sysctl net.ipv4.ip_forward=1
 ```
 
 ## カーネル  
