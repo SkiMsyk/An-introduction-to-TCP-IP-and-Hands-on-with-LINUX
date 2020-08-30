@@ -15,8 +15,11 @@ $ docker pull ubuntu:18.04
 ```
 
 ubuntu:18.04コンテナの起動
+
+- ip系のコマンドのpermissionがない場合があるので `--privileged`のオプションを追加
+
 ```shell
-$ docker run -it -d --name ubuntu ubuntu:18.04
+$ docker run --privileged -it -d --name ubuntu-tcpip ubuntu:18.04
 ```
 
 起動したコンテナに入る
